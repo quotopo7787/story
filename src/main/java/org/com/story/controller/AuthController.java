@@ -1,5 +1,6 @@
 package org.com.story.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.com.story.dto.request.LoginRequest;
 import org.com.story.dto.response.LoginResponse;
@@ -10,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -20,7 +22,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest req) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest req) {
 
         Authentication authentication =
                 authenticationManager.authenticate(
@@ -29,7 +31,6 @@ public class AuthController {
                                 req.getPassword()
                         )
                 );
-
         String accessToken =
                 jwtUtil.generateAccessToken(req.getUsername());
 

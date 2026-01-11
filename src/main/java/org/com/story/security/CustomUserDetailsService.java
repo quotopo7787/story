@@ -21,25 +21,25 @@ public class CustomUserDetailsService
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) {
+    public UserDetails loadUserByUsername(String email) {
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found"));
 
         List<GrantedAuthority> authorities =
-                user.getRoles().stream()
-                        .map(role ->
-                                new SimpleGrantedAuthority(
-                                        "ROLE_" + role.getName()
-                                )
-                        )
-                        .collect(Collectors.toList());
+                user.getRoles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName())).collect(Collectors.toList());
 
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
+                user.getEmail(),
+                user.getPassword() == null ? "" : user.getPassword(),
+                user.getEnabled(),
+                true,
+                true,
+                true,
                 authorities
         );
     }
 }
+
+
