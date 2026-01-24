@@ -22,11 +22,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
+    // 🔥 BỎ QUA FILTER HOÀN TOÀN
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        return path.startsWith("/api/auth")
+        return "OPTIONS".equalsIgnoreCase(request.getMethod())
+                || path.startsWith("/api/auth")
                 || path.startsWith("/api/health")
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui")
@@ -35,43 +37,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/login/oauth2");
     }
 
-
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         try {
-            String authHeader = request.getHeader("Authorization");
+            String token = authHeader.substring(7);
 
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            if (jwtUtil.validateToken(token)) {
 
-                String token = authHeader.substring(7);
+                String username = jwtUtil.extractUsername(token);
 
-                if (jwtUtil.validateToken(token)) {
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(username);
 
-                    String username = jwtUtil.extractUsername(token);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-                    UserDetails userDetails =
-                            userDetailsService.loadUserByUsername(username);
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
-                    );
-
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authentication);
-                }
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
             }
         } catch (Exception ex) {
             SecurityContextHolder.clearContext();
@@ -79,5 +82,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
 }

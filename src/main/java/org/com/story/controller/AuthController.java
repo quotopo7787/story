@@ -21,7 +21,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
 
-    @PostMapping("/login")
+    @PostMapping("/sign-in")
     public LoginResponse login(@Valid @RequestBody LoginRequest req) {
 
         Authentication authentication =

@@ -3,7 +3,10 @@ package org.com.story.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.com.story.common.AuthProvider;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 @Entity
 @Table(name = "users")
@@ -39,5 +42,27 @@ public class User {
     private String providerId; // google sub
 
     private Boolean enabled = true;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    @ManyToMany
+    @JoinTable(
+            name = "follows",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "story_id")
+    )
+    private Set<Story> followedStories;
+
+    @ManyToMany
+    @JoinTable(
+            name = "chapter_purchases",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "chapter_id")
+    )
+    private Set<Chapter> purchasedChapters;
 }
 
