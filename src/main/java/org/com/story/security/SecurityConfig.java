@@ -35,7 +35,7 @@ public class SecurityConfig {
 
         http
                 // ✅ CORS
-                .cors(Customizer.withDefaults())
+                .cors(cors -> cors.disable())
 
                 // ❌ CSRF
                 .csrf(csrf -> csrf.disable())
